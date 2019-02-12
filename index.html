@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>application.yml to config</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.12.1/js-yaml.min.js"></script>
+</head>
+<body>
+    <h1 class="text-center">application.yml to config</h1>
+    <div class="row">
+        <div class="col-6">
+            <h5>application.yml</h5>
+            <textarea rows="20" class="form-control" id="target"></textarea>
+        </div>
+        <div class="col-6">
+            <h5>config</h5>
+            <textarea rows="20" class="form-control" id="result"></textarea>
+        </div>
+    </div>
+</body>
+<script>
+"use strict";
+    let env_list = [];
+
+    let jsonToEnv = function(json, prefix) {
+        if(json instanceof Array) {
+            for(let value of json) {
+                jsonToEnv(value, prefix);
+            }
+        } else if($.isPlainObject(json)) {
+            for(let key in json) {
+                let next_prefix = '';
+                if(prefix.length == 0) {
+                    next_prefix = convertUpperCaseAndUnderBar(key);
+                } else {
+                    next_prefix = prefix + "_" + convertUpperCaseAndUnderBar(key);
+                }
+                jsonToEnv(json[key], next_prefix);
+            }
+        } else {
+            env_list.push(`${prefix}: "${json}"`);
+        }
+    };
+
+    let convertUpperCaseAndUnderBar = function(value) {
+        // 大文字を小文字に変換＆_付与
+        value = value.replace(/([A-Z])/g, function(s) {
+            return '_' + s.charAt(0).toLowerCase();
+        });
+        value = value.replace(/\-/g, '_');
+        return value.toUpperCase();
+    };
+
+    $(function() {
+        $('#target').keyup(function() {
+            let yaml = $('#target').val();
+            let json = jsyaml.load(yaml);
+            console.log({
+                yaml: yaml,
+                json: json
+            });
+            env_list = [];
+            jsonToEnv(json, '');
+            console.log({
+                env_list: env_list
+            });
+            $('#result').val(env_list.join('\n'));
+        });
+    });
+</script>
+</html>
